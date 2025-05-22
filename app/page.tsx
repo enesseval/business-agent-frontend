@@ -1,103 +1,90 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import ApiKeyInput from "@/components/api-key-input";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+   const router = useRouter();
+   const [apiKey, setApiKey] = useState<string>("");
+   const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
+   const [file, setFile] = useState<File | null>(null);
+   const [isLoading, setIsLoading] = useState<boolean>(false);
+   const [loadingStatus, setLoadingStatus] = useState<string>("");
+   const [loadingProgress, setLoadingProgress] = useState<number>(0);
+   const [loadingMessages, setLoadingMessages] = useState<string[]>([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+   // Simulated processing function
+   const simulateProcessing = async () => {
+      setIsLoading(true);
+      setLoadingProgress(0);
+      setLoadingMessages([]);
+
+      // Step 1: Data cleaning
+      setLoadingStatus("Veriler temizleniyor...");
+      setLoadingMessages((prev) => [...prev, "Veriler temizleniyor..."]);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      setLoadingProgress(20);
+
+      // Step 2: Data cleaned
+      setLoadingStatus("Veriler temizlendi. Veri yapısı analiz ediliyor...");
+      setLoadingMessages((prev) => [...prev, "Veriler temizlendi. Veri yapısı analiz ediliyor..."]);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setLoadingProgress(40);
+
+      // Step 3: Getting insights
+      setLoadingStatus("İç görüler alınıyor...");
+      setLoadingMessages((prev) => [...prev, "İç görüler alınıyor..."]);
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+      setLoadingProgress(60);
+
+      // Step 4: Creating charts
+      setLoadingStatus("Grafikler oluşturuluyor...");
+      setLoadingMessages((prev) => [...prev, "Grafikler oluşturuluyor..."]);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      setLoadingProgress(80);
+
+      // Step 5: Finalizing
+      setLoadingStatus("İşlem tamamlanıyor...");
+      setLoadingMessages((prev) => [...prev, "İşlem tamamlanıyor..."]);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setLoadingProgress(100);
+
+      // Complete
+      setLoadingMessages((prev) => [...prev, "Analiz tamamlandı! Sonuçlar yükleniyor..."]);
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      setIsLoading(false);
+
+      // Redirect to demo dashboard
+      router.push("/demo");
+   };
+
+   // Handle API key validation
+   const handleApiKeyValidation = (key: string, isValid: boolean) => {
+      setApiKey(key);
+      setIsApiKeyValid(isValid);
+   };
+
+   // Handle file selection
+   const handleFileSelected = (selectedFile: File | null) => {
+      setFile(selectedFile);
+   };
+
+   return (
+      <main className="min-h-screen bg-gradient-to-b from-[#0f1116] to-[#0a0c10] relative">
+         <div className="container mx-auto px-4 py-8">
+            <div className="mb-8 text-center">
+               <h1 className="text-4xl font-bold tracking-tight text-[#f0f2f5] sm:text-5xl">
+                  Business Agent <span className="text-[#10b981]">AI</span>
+               </h1>
+               <p className="mt-1 text-base text-[#a0a8b3] max-w-2xl mx-auto">CSV dosyalarınızı yükleyin ve yapay zeka destekli analizler alın</p>
+               <p className="mt-3 text-lg text-[#d0d5dd] max-w-2xl mx-auto">Upload your CSV data and get AI-powered insights, visualizations, and actionable recommendations.</p>
+            </div>
+            <div className="max-w-5xl mx-auto">
+               <ApiKeyInput />
+            </div>
+         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+   );
 }
