@@ -1,19 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
 import ApiKeyInput from "@/components/api-key-input";
+import FileUpload from "@/components/file-upload";
+import LoadingOverlay from "@/components/loading-overlay";
 
 export default function Home() {
    const router = useRouter();
-   const [apiKey, setApiKey] = useState<string>("");
    const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
    const [file, setFile] = useState<File | null>(null);
    const [isLoading, setIsLoading] = useState<boolean>(false);
    const [loadingStatus, setLoadingStatus] = useState<string>("");
    const [loadingProgress, setLoadingProgress] = useState<number>(0);
    const [loadingMessages, setLoadingMessages] = useState<string[]>([]);
+   const [overlay, setOverlay] = useState(false);
+   const [aiRes, setAiRes] = useState("");
+   const [aiStat, setAiStat] = useState<"idle" | "loading" | "done">("idle");
+
+   useEffect(() => {
+      setAiStat("loading"); // Başlangıçta loading yap
+      const timeout1 = setTimeout(() => {
+         setAiStat("done");
+         const timeout2 = setTimeout(() => {
+            setAiRes("Dosyanız Temizlendi.");
+            const timeout3 = setTimeout(() => {
+               setAiRes("İç görü üretiliyor...");
+            }, 2000);
+            return () => clearTimeout(timeout3);
+         }, 1000);
+         return () => clearTimeout(timeout2);
+      }, 500);
+
+      return () => clearTimeout(timeout1);
+   }, []);
 
    // Simulated processing function
    const simulateProcessing = async () => {
@@ -61,8 +82,7 @@ export default function Home() {
    };
 
    // Handle API key validation
-   const handleApiKeyValidation = (key: string, isValid: boolean) => {
-      setApiKey(key);
+   const handleApiKeyValidation = (isValid: boolean) => {
       setIsApiKeyValid(isValid);
    };
 
@@ -82,9 +102,19 @@ export default function Home() {
                <p className="mt-3 text-lg text-[#d0d5dd] max-w-2xl mx-auto">Upload your CSV data and get AI-powered insights, visualizations, and actionable recommendations.</p>
             </div>
             <div className="max-w-5xl mx-auto">
-               <ApiKeyInput />
+               <ApiKeyInput onValidation={handleApiKeyValidation} />
+
+               <FileUpload
+                  onFileSelected={handleFileSelected}
+                  isApiKeyValid={isApiKeyValid}
+                  onAnalyzeClick={() => {
+                     setOverlay(true);
+                     setAiStat("loading");
+                  }}
+               />
             </div>
          </div>
+         <LoadingOverlay aiResponse={aiRes} status={aiStat} />
       </main>
    );
 }
