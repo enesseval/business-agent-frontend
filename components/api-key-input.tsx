@@ -32,7 +32,6 @@ function ApiKeyInput({ onValidation }: ApiKeyInputProps) {
 
       try {
          const res = await checkGeminiApi(apiKey);
-         console.log(res);
          if (res?.success) {
             setIsValidated(true);
             onValidation(true);

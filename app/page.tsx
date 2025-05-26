@@ -11,75 +11,8 @@ export default function Home() {
    const router = useRouter();
    const [isApiKeyValid, setIsApiKeyValid] = useState<boolean>(false);
    const [file, setFile] = useState<File | null>(null);
-   const [isLoading, setIsLoading] = useState<boolean>(false);
-   const [loadingStatus, setLoadingStatus] = useState<string>("");
-   const [loadingProgress, setLoadingProgress] = useState<number>(0);
-   const [loadingMessages, setLoadingMessages] = useState<string[]>([]);
-   const [overlay, setOverlay] = useState(false);
    const [aiRes, setAiRes] = useState("");
    const [aiStat, setAiStat] = useState<"idle" | "loading" | "done">("idle");
-
-   useEffect(() => {
-      setAiStat("loading"); // Başlangıçta loading yap
-      const timeout1 = setTimeout(() => {
-         setAiStat("done");
-         const timeout2 = setTimeout(() => {
-            setAiRes("Dosyanız Temizlendi.");
-            const timeout3 = setTimeout(() => {
-               setAiRes("İç görü üretiliyor...");
-            }, 2000);
-            return () => clearTimeout(timeout3);
-         }, 1000);
-         return () => clearTimeout(timeout2);
-      }, 500);
-
-      return () => clearTimeout(timeout1);
-   }, []);
-
-   // Simulated processing function
-   const simulateProcessing = async () => {
-      setIsLoading(true);
-      setLoadingProgress(0);
-      setLoadingMessages([]);
-
-      // Step 1: Data cleaning
-      setLoadingStatus("Veriler temizleniyor...");
-      setLoadingMessages((prev) => [...prev, "Veriler temizleniyor..."]);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setLoadingProgress(20);
-
-      // Step 2: Data cleaned
-      setLoadingStatus("Veriler temizlendi. Veri yapısı analiz ediliyor...");
-      setLoadingMessages((prev) => [...prev, "Veriler temizlendi. Veri yapısı analiz ediliyor..."]);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setLoadingProgress(40);
-
-      // Step 3: Getting insights
-      setLoadingStatus("İç görüler alınıyor...");
-      setLoadingMessages((prev) => [...prev, "İç görüler alınıyor..."]);
-      await new Promise((resolve) => setTimeout(resolve, 2500));
-      setLoadingProgress(60);
-
-      // Step 4: Creating charts
-      setLoadingStatus("Grafikler oluşturuluyor...");
-      setLoadingMessages((prev) => [...prev, "Grafikler oluşturuluyor..."]);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setLoadingProgress(80);
-
-      // Step 5: Finalizing
-      setLoadingStatus("İşlem tamamlanıyor...");
-      setLoadingMessages((prev) => [...prev, "İşlem tamamlanıyor..."]);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      setLoadingProgress(100);
-
-      // Complete
-      setLoadingMessages((prev) => [...prev, "Analiz tamamlandı! Sonuçlar yükleniyor..."]);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      setIsLoading(false);
-
-      // Redirect to demo dashboard
-      router.push("/demo");
-   };
 
    // Handle API key validation
    const handleApiKeyValidation = (isValid: boolean) => {
@@ -89,6 +22,50 @@ export default function Home() {
    // Handle file selection
    const handleFileSelected = (selectedFile: File | null) => {
       setFile(selectedFile);
+   };
+
+   const handleAnalyze = async () => {
+      if (!file || !isApiKeyValid) return;
+
+      setAiRes("");
+      setAiStat("loading");
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("api_key", localStorage.getItem("geminiApiKey") || "");
+
+      const response = await fetch("http://localhost:8000/upload-stream", {
+         method: "POST",
+         body: formData,
+      });
+
+      if (!response.ok) throw new Error("Server error");
+
+      if (!response.body) return;
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      let buffer = "";
+
+      while (true) {
+         const { done, value } = await reader.read();
+         if (done) break;
+
+         buffer += decoder.decode(value, { stream: true });
+
+         const parts = buffer.split("\n\n");
+         buffer = parts.pop() || "";
+
+         for (const part of parts) {
+            const line = part.trim();
+            if (line.startsWith("data:")) {
+               const message = line.replace("data:", "").trim();
+               setAiRes(message);
+            }
+         }
+      }
+      setAiStat("done");
    };
 
    return (
@@ -104,17 +81,10 @@ export default function Home() {
             <div className="max-w-5xl mx-auto">
                <ApiKeyInput onValidation={handleApiKeyValidation} />
 
-               <FileUpload
-                  onFileSelected={handleFileSelected}
-                  isApiKeyValid={isApiKeyValid}
-                  onAnalyzeClick={() => {
-                     setOverlay(true);
-                     setAiStat("loading");
-                  }}
-               />
+               <FileUpload onFileSelected={handleFileSelected} isApiKeyValid={isApiKeyValid} onAnalyzeClick={handleAnalyze} />
             </div>
          </div>
-         <LoadingOverlay aiResponse={aiRes} status={aiStat} />
+         {aiStat !== "idle" && <LoadingOverlay message={aiRes} status={aiStat} />}
       </main>
    );
 }

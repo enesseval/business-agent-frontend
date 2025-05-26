@@ -89,7 +89,7 @@ function FileUpload({ onFileSelected, isApiKeyValid, onAnalyzeClick }: FileUploa
                            if (ref) fileInputRef.current = ref;
                         }}
                      />
-                     <Button variant="outline" className="mt-2 border-[#2a2e37] text-[#d0d5dd] hover:bg-[#2a2e37]" onClick={() => fileInputRef.current?.click()}>
+                     <Button variant="outline" className="cursor-pointer mt-2 border-[#2a2e37] text-[#d0d5dd] hover:bg-[#2a2e37]" onClick={() => fileInputRef.current?.click()}>
                         CSV Dosyası Seç
                      </Button>
                   </div>
