@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import ApiKeyInput from "@/components/api-key-input";
 import FileUpload from "@/components/file-upload";
 import LoadingOverlay from "@/components/loading-overlay";
+import { useAnalysis } from "@/context/AnalysisContext";
 
 export default function Home() {
    const router = useRouter();
@@ -13,6 +14,8 @@ export default function Home() {
    const [file, setFile] = useState<File | null>(null);
    const [aiRes, setAiRes] = useState("");
    const [aiStat, setAiStat] = useState<"idle" | "loading" | "done">("idle");
+   const [lastRes, setLastRes] = useState<string | undefined>();
+   const { setResult } = useAnalysis();
 
    // Handle API key validation
    const handleApiKeyValidation = (isValid: boolean) => {
@@ -48,6 +51,8 @@ export default function Home() {
 
       let buffer = "";
 
+      let lastMessage = "";
+
       while (true) {
          const { done, value } = await reader.read();
          if (done) break;
@@ -62,9 +67,21 @@ export default function Home() {
             if (line.startsWith("data:")) {
                const message = line.replace("data:", "").trim();
                setAiRes(message);
+            } else if (line.startsWith("data_last")) {
+               const message = line.replace("data_last:", "").trim();
+               lastMessage = message;
             }
          }
       }
+
+      try {
+         const parsed = JSON.parse(lastMessage);
+         setResult(parsed); // bu, context'e uygun FinalResult tipinde olacak
+         router.push("/result");
+      } catch (error) {
+         console.error("Error parsing JSON:", error);
+      }
+
       setAiStat("done");
    };
 
