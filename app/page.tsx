@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Suspense } from "react";
 import ApiKeyInput from "@/components/api-key-input";
 import FileUpload from "@/components/file-upload";
 import LoadingOverlay from "@/components/loading-overlay";
@@ -14,7 +13,6 @@ export default function Home() {
    const [file, setFile] = useState<File | null>(null);
    const [aiRes, setAiRes] = useState("");
    const [aiStat, setAiStat] = useState<"idle" | "loading" | "done">("idle");
-   const [lastRes, setLastRes] = useState<string | undefined>();
    const { setResult } = useAnalysis();
 
    // Handle API key validation

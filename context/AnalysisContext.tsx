@@ -1,33 +1,54 @@
 "use client";
 
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useContext, useMemo, useState } from "react";
 
 type Chart = {
    title: string;
-   type: "Bar Chart" | "Line Chart" | "Pie Chart";
-   x_axis: string;
-   y_axis: string;
+   chart_type: "Bar Chart" | "Line Chart" | "Pie Chart";
+   x_axis: {
+      original_col_name: string;
+      replaced_col_name: string;
+   };
+   y_axis: {
+      original_col_name: string;
+      replaced_col_name: string;
+   };
    grouping?: string;
 };
 
 type AnalysisResult = {
+   eksik_degerler: number;
+   kalite_puani: number;
+   satir_sayisi: number;
+   sutun_sayisi: number;
+   tamlik: number;
+   yinelenen_satirlar: number;
+   veri_tipleri: [{ name: string; count: number }, { name: string; count: number }, { name: string; count: number }, { name: string; count: number }];
+};
+
+type RawResult = {
    charts: Chart[];
    insights: string;
 };
 
 type FinalResult = {
-   result: string; // AI'nın orijinal cevabı (ham metin)
-   analyze_result: AnalysisResult; // frontend için gerekli grafik ve markdown içeriği
-   cleaned_data: Record<string, any>[]; // tablo göstermek için kullanılır
+   result: RawResult;
+   analyze_result: AnalysisResult;
+   cleaned_data: Record<string, any>[];
+   file_name: string;
+   processing_date: string;
 };
 
 type AnalysisContextType = {
-   result: FinalResult | null;
    setResult: (data: FinalResult | null) => void;
+   rawResult?: RawResult;
+   analysis?: AnalysisResult;
+   cleanedData?: Record<string, any>[];
+   fileName?: string;
+   processingDate?: string;
 };
 
 const AnalysisContext = createContext<AnalysisContextType>({
-   result: null,
    setResult: () => {},
 });
 
@@ -36,5 +57,17 @@ export const useAnalysis = () => useContext(AnalysisContext);
 export const AnalysisProvider = ({ children }: { children: ReactNode }) => {
    const [result, setResult] = useState<FinalResult | null>(null);
 
-   return <AnalysisContext.Provider value={{ result, setResult }}>{children}</AnalysisContext.Provider>;
+   const contextValue = useMemo(
+      () => ({
+         setResult,
+         rawResult: result?.result,
+         analysis: result?.analyze_result,
+         cleanedData: result?.cleaned_data,
+         fileName: result?.file_name,
+         processingDate: result?.processing_date,
+      }),
+      [result]
+   );
+
+   return <AnalysisContext.Provider value={contextValue}>{children}</AnalysisContext.Provider>;
 };
